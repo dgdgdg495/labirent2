@@ -1,0 +1,37 @@
+name: APK Derle
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Klasorleri duzenle
+        run: |
+          P=app/src/main/java/com/dikilioryantiring/labirent
+          mkdir -p $P app/src/main/assets app/src/main/res/drawable gradle/wrapper
+          mv AndroidManifest.xml app/src/main/
+          mv MainActivity.java $P/
+          mv ic_launcher.xml app/src/main/res/drawable/
+          mv index.html app/src/main/assets/
+          for f in build*.gradle; do
+            if grep -q namespace "$f"; then mv "$f" app/build.gradle; fi
+          done
+          for f in build*.gradle; do
+            if [ "$f" != "build.gradle" ]; then mv "$f" build.gradle; fi
+          done
+          ls -R app
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+      - run: gradle assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LabirentOryantiring-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
